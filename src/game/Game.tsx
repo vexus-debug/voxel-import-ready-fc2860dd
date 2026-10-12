@@ -643,12 +643,13 @@ function Scene() {
 }
 
 // Drifting cloud shadows: same wind as the 3D clouds, sampled from a soft noise field.
+const WIND_X = 2.2, WIND_Z = 0.9; // blocks per second
 const CLOUD_GLSL = `
 uniform float cloudT, cloudDay; varying vec3 vCW;
 float cH(vec2 p){ return fract(sin(dot(p, vec2(127.1,311.7)))*43758.5453); }
 float cN(vec2 p){ vec2 i=floor(p), f=fract(p); f=f*f*(3.0-2.0*f);
   return mix(mix(cH(i),cH(i+vec2(1,0)),f.x), mix(cH(i+vec2(0,1)),cH(i+vec2(1,1)),f.x), f.y); }
-float cloudShade(vec2 p){ p = (p - vec2(cloudT*${'$'}{WIND_X.toFixed(2)}, cloudT*${'$'}{WIND_Z.toFixed(2)})) / 38.0;
+float cloudShade(vec2 p){ p = (p - vec2(cloudT*${WIND_X.toFixed(2)}, cloudT*${WIND_Z.toFixed(2)})) / 38.0;
   float n = cN(p)*0.6 + cN(p*2.1+5.3)*0.3 + cN(p*4.3+1.7)*0.1; return smoothstep(0.5, 0.68, n); }
 `;
 function addCloudShadows(m: THREE.Material) {
@@ -662,7 +663,6 @@ function addCloudShadows(m: THREE.Material) {
   };
 }
 
-const WIND_X = 2.2, WIND_Z = 0.9; // blocks per second
 const CLOUD_TILE = 520;
 function Clouds() {
   const { camera } = useThree();
