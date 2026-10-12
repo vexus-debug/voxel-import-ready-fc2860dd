@@ -1,4 +1,5 @@
 import { ATLAS_COLS, HOTBAR } from "./blocks";
+import { MiniMap, RealmMap } from "./Map";
 import { touch, isTouchDevice } from "./touch";
 import { emit, ui as uiState } from "./state";
 import { getGame, newWorld, respawn, saveGame, useUI, MAX_HEALTH } from "./state";
@@ -51,6 +52,9 @@ export function HUD() {
       <div className="absolute left-4 top-4 rounded-md bg-background/60 px-3 py-1.5 text-xl leading-none">
         {isNight ? "☾ Night" : "☀ Day"} · {clockLabel(ui.time)}
       </div>
+
+      {ui.locked && <MiniMap />}
+      <RealmMap />
 
       {/* crosshair */}
       <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 text-3xl leading-none drop-shadow">+</div>
