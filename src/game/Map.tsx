@@ -153,9 +153,9 @@ export function RealmMap() {
           onPointerUp={() => (drag.current = null)}
         >
           <canvas ref={ref} width={W} height={Hh} className="absolute inset-0 h-full w-full" />
-          <svg className="absolute inset-0 h-full w-full" viewBox={`0 0 ${W} ${Hh}`} preserveAspectRatio="none">
+          <div className="absolute left-0 top-0 origin-top-left" style={{ width: W, height: Hh, transform: `scale(${1})` }}>
             <Markers cx={view.cx} cz={view.cz} scale={view.scale} w={W} h={Hh} labels />
-          </svg>
+          </div>
           <div className="pointer-events-none absolute bottom-2 right-3 text-center leading-none" style={{ color: "#3a2616" }}>
             <div className="text-4xl">✵</div><div className="text-base">N</div>
           </div>

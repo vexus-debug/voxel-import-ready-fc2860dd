@@ -1,3 +1,4 @@
+import { mapView } from "./landmarks";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { PointerLockControls } from "@react-three/drei";
 import { useEffect, useMemo, useRef, useState } from "react";
