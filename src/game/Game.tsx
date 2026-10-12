@@ -352,6 +352,7 @@ function Player({ zt }: { zt: React.MutableRefObject<ZombieTarget> }) {
       }
       if (e.code === "Space" && ui.locked) e.preventDefault();
       if (e.code === "KeyF" && ui.locked && !ui.dead) { ui.fly = !ui.fly; emit(); }
+      if (e.code === "KeyM" && !ui.dead) { mapView.open = !mapView.open; emit(); }
       if (e.code === "KeyP" && ui.locked && !ui.dead) { ui.photo = !ui.photo; if (!ui.photo) ui.hideHud = false; emit(); }
       if (e.code === "KeyH" && ui.photo) { ui.hideHud = !ui.hideHud; emit(); }
     };
@@ -483,6 +484,7 @@ function Player({ zt }: { zt: React.MutableRefObject<ZombieTarget> }) {
 
     // movement
     camera.getWorldDirection(dir);
+    mapView.heading = Math.atan2(dir.x, -dir.z);
     const fwd = new THREE.Vector3(dir.x, 0, dir.z).normalize();
     const right = new THREE.Vector3(-fwd.z, 0, fwd.x);
     const wish = new THREE.Vector3();
