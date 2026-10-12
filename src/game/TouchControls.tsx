@@ -1,10 +1,11 @@
 import { useRef, useState } from "react";
 import { touch } from "./touch";
-import { saveGame, ui, emit } from "./state";
+import { saveGame, ui, emit, useUI } from "./state";
 
 const R = 55;
 
 export function TouchControls() {
+  useUI();
   const joyId = useRef<number | null>(null);
   const joyOrigin = useRef({ x: 0, y: 0 });
   const [knob, setKnob] = useState<{ x: number; y: number; ox: number; oy: number } | null>(null);
