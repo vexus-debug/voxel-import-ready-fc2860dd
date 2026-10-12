@@ -6,6 +6,7 @@ export const touch = {
   lookDX: 0, // accumulated pixels since last frame
   lookDY: 0,
   jump: false,
+  down: false,
   sprint: false,
   primaryDown: () => {},
   primaryUp: () => {},

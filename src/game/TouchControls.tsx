@@ -1,10 +1,11 @@
 import { useRef, useState } from "react";
 import { touch } from "./touch";
-import { saveGame, ui, emit } from "./state";
+import { saveGame, ui, emit, useUI } from "./state";
 
 const R = 55;
 
 export function TouchControls() {
+  useUI();
   const joyId = useRef<number | null>(null);
   const joyOrigin = useRef({ x: 0, y: 0 });
   const [knob, setKnob] = useState<{ x: number; y: number; ox: number; oy: number } | null>(null);
@@ -93,6 +94,22 @@ export function TouchControls() {
         >
           ⛏
         </button>
+        <div className="flex gap-3">
+          <button className={`${btn} h-12 w-12 text-xs`} onPointerDown={(e) => { e.preventDefault(); ui.fly = !ui.fly; emit(); }}>
+            {ui.fly ? "WALK" : "FLY"}
+          </button>
+          {ui.fly && (
+            <button
+              className={`${btn} h-12 w-12`}
+              onPointerDown={(e) => { e.preventDefault(); touch.down = true; }}
+              onPointerUp={() => (touch.down = false)}
+              onPointerCancel={() => (touch.down = false)}
+              onPointerLeave={() => (touch.down = false)}
+            >
+              ▼
+            </button>
+          )}
+        </div>
         <div className="flex gap-3">
           <button className={`${btn} h-16 w-16`} onPointerDown={(e) => { e.preventDefault(); touch.place(); }}>
             ▣

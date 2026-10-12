@@ -21,6 +21,9 @@ export const B = {
   ALOE: 17,
   JUNGLE_GRASS: 18,
   FERN: 19,
+  STONE_BRICK: 20,
+  MOSSY_BRICK: 21,
+  TIMBER: 22,
 } as const;
 
 export type Tool = "pickaxe" | "axe" | "shovel";
@@ -53,6 +56,9 @@ export const BLOCKS: Record<number, BlockDef> = {
   [B.REED]: { name: "Papyrus Reeds", hardness: 0.05, tool: null, tiles: [18, 18, 18], drop: 0, transparent: true },
   [B.ALOE]: { name: "Aloe", hardness: 0.1, tool: null, tiles: [19, 19, 19], drop: 0, transparent: true },
   [B.JUNGLE_GRASS]: { name: "Rainforest Grass", hardness: 0.9, tool: "shovel", tiles: [21, 22, 2], drop: B.DIRT },
+  [B.STONE_BRICK]: { name: "Castle Stone Brick", hardness: 5, tool: "pickaxe", tiles: [24, 24, 24], drop: B.STONE_BRICK },
+  [B.MOSSY_BRICK]: { name: "Mossy Stone Brick", hardness: 5, tool: "pickaxe", tiles: [25, 25, 25], drop: B.STONE_BRICK },
+  [B.TIMBER]: { name: "Spruce Roof Timber", hardness: 2, tool: "axe", tiles: [26, 26, 26], drop: B.TIMBER },
   [B.FERN]: { name: "Fern", hardness: 0.05, tool: null, tiles: [23, 23, 23], drop: 0, transparent: true },
 };
 
@@ -81,7 +87,7 @@ export const isNatural = (id: number) => id === B.GRASS || id === B.DIRT || id =
 
 
 // ---------- Procedural texture atlas (4x4 tiles, 16px each) ----------
-export const ATLAS_COLS = 5;
+export const ATLAS_COLS = 6;
 
 function rng(seed: number) {
   let s = seed >>> 0;
@@ -298,6 +304,27 @@ export function drawAtlas(): HTMLCanvasElement {
       if (Math.abs(bend) < 0.09 * (1 - t) && Math.sin(t * 60) > -0.2) return [...mul([60, 130, 45], 0.8 + t * 0.4 + (n - 0.5) * 0.15), 255];
     }
     return [0, 0, 0, 0];
+  });
+  // castle ashlar: weathered grey dressed stone in staggered courses
+  const ashlar = (u: number, v: number, n: number, moss: boolean) => {
+    const row = Math.floor(v * 4), off = row % 2 ? 0.25 : 0;
+    const fv = v * 4 - row, fu = ((u + off) * 2) % 1;
+    const big = N(u, v, 4, 4), grit = M(u, v, 16, 2);
+    const blockTint = M(Math.floor((u + off) * 2) / 2 + row * 0.13, row / 4, 4, 1);
+    if (fv > 0.9 || fu > 0.955) return mul([88, 86, 82], 0.85 + grit * 0.3);
+    let col = mix([122, 120, 114], [168, 165, 156], big * 0.6 + blockTint * 0.5);
+    if (fv < 0.07 || fu < 0.03) col = mul(col, 1.12); // chipped top edge highlight
+    if (moss && N(u + 0.2, v, 3, 3) + (1 - v) * 0.15 > 0.58) col = mix(col, [74, 98, 46], 0.75 + grit * 0.25);
+    return mul(col, 0.88 + grit * 0.2 + (n - 0.5) * 0.1);
+  };
+  put(24, (u, v, n) => ashlar(u, v, n, false));
+  put(25, (u, v, n) => ashlar(u, v, n, true));
+  // dark spruce roof boards
+  put(26, (u, v, n) => {
+    const col = Math.floor(u * 5), fu = u * 5 - col;
+    if (fu > 0.94) return [36, 26, 18];
+    const grain = N(u * 0.3 + col * 0.41, v * 0.25, 8, 3);
+    return mul(mix([62, 44, 30], [102, 74, 50], grain), 0.9 + (n - 0.5) * 0.1);
   });
   ctx.putImageData(img, 0, 0);
   return c;

@@ -105,6 +105,7 @@ export function HUD() {
               <span className="text-muted-foreground">WASD</span><span>Move</span>
               <span className="text-muted-foreground">Mouse</span><span>Look</span>
               <span className="text-muted-foreground">Space / Shift</span><span>Jump / Sprint</span>
+              <span className="text-muted-foreground">F (then Space / Q)</span><span>Fly up / down</span>
               <span className="text-muted-foreground">Hold left click</span><span>Break / attack</span>
               <span className="text-muted-foreground">Right click</span><span>Place block</span>
               <span className="text-muted-foreground">1–9 / wheel</span><span>Select item</span>
