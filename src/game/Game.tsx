@@ -351,6 +351,7 @@ function Player({ zt }: { zt: React.MutableRefObject<ZombieTarget> }) {
         }
       }
       if (e.code === "Space" && ui.locked) e.preventDefault();
+      if (e.code === "KeyF" && ui.locked && !ui.dead) { ui.fly = !ui.fly; emit(); }
       if (e.code === "KeyP" && ui.locked && !ui.dead) { ui.photo = !ui.photo; if (!ui.photo) ui.hideHud = false; emit(); }
       if (e.code === "KeyH" && ui.photo) { ui.hideHud = !ui.hideHud; emit(); }
     };
@@ -493,13 +494,18 @@ function Player({ zt }: { zt: React.MutableRefObject<ZombieTarget> }) {
       if (touch.moveX || touch.moveY) wish.addScaledVector(fwd, touch.moveY).addScaledVector(right, touch.moveX);
     }
     const mag = Math.min(1, wish.length());
-    if (mag > 0.05) wish.normalize().multiplyScalar((k["ShiftLeft"] || touch.sprint ? 6.2 : 4.3) * (touch.enabled ? mag : 1) * (inWater ? 0.55 : 1));
+    if (mag > 0.05) wish.normalize().multiplyScalar((k["ShiftLeft"] || touch.sprint ? 6.2 : 4.3) * (ui.fly ? 2.2 : 1) * (touch.enabled ? mag : 1) * (inWater ? 0.55 : 1));
     else wish.set(0, 0, 0);
-    const blend = 1 - Math.exp(-(onGround.current || inWater ? 14 : 3) * dt);
+    const blend = 1 - Math.exp(-(onGround.current || inWater || ui.fly ? 14 : 3) * dt);
     g.vel.x += (wish.x - g.vel.x) * blend;
     g.vel.z += (wish.z - g.vel.z) * blend;
     const jumpHeld = active && (k["Space"] || touch.jump);
-    if (inWater) {
+    if (ui.fly) {
+      // creative flight: Space/▲ rises, Q/Ctrl/▼ sinks, no gravity or fall damage
+      const up = (jumpHeld ? 1 : 0) - (active && (k["KeyQ"] || k["ControlLeft"] || k["KeyC"] || touch.down) ? 1 : 0);
+      g.vel.y += (up * 9 - g.vel.y) * (1 - Math.exp(-10 * dt));
+      fallStart.current = null;
+    } else if (inWater) {
       // buoyant: slow sinking, drag, hold jump to swim up
       g.vel.y *= Math.exp(-3 * dt);
       g.vel.y = Math.max(-2.5, g.vel.y - 5 * dt);
@@ -513,7 +519,7 @@ function Player({ zt }: { zt: React.MutableRefObject<ZombieTarget> }) {
     onGround.current = res.onGround;
 
     // fall damage
-    if (!res.onGround && g.vel.y < 0 && fallStart.current === null) fallStart.current = g.pos.y;
+    if (!ui.fly && !res.onGround && g.vel.y < 0 && fallStart.current === null) fallStart.current = g.pos.y;
     if (res.onGround && fallStart.current !== null) {
       const dist = fallStart.current - g.pos.y;
       if (dist > 3.5) damage(Math.floor(dist - 3), clock.current);

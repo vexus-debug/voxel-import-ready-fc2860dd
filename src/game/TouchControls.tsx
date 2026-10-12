@@ -94,6 +94,22 @@ export function TouchControls() {
           ⛏
         </button>
         <div className="flex gap-3">
+          <button className={`${btn} h-12 w-12 text-xs`} onPointerDown={(e) => { e.preventDefault(); ui.fly = !ui.fly; emit(); }}>
+            {ui.fly ? "WALK" : "FLY"}
+          </button>
+          {ui.fly && (
+            <button
+              className={`${btn} h-12 w-12`}
+              onPointerDown={(e) => { e.preventDefault(); touch.down = true; }}
+              onPointerUp={() => (touch.down = false)}
+              onPointerCancel={() => (touch.down = false)}
+              onPointerLeave={() => (touch.down = false)}
+            >
+              ▼
+            </button>
+          )}
+        </div>
+        <div className="flex gap-3">
           <button className={`${btn} h-16 w-16`} onPointerDown={(e) => { e.preventDefault(); touch.place(); }}>
             ▣
           </button>

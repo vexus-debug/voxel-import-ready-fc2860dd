@@ -1,6 +1,7 @@
 // Hot numeric voxel loops: index-signature strictness is disabled here for readability.
 // @ts-nocheck
 import * as THREE from "three";
+import { CASTLE_DATA, CASTLE_SIZE } from "./castleData";
 import { B, BLOCKS, ATLAS_COLS, isTransparent, isPassable, isNatural, isPlant } from "./blocks";
 
 export const CH = 16;
@@ -41,6 +42,65 @@ export class World {
   chunks = new Map<string, Uint8Array>();
   versions = new Map<string, number>();
   constructor(public seed: number, public edits: Edits = {}) {}
+
+  // ---- Classic Stone Castle (CastleShift mod pieces) ----
+  private castleGrid: Uint8Array | null = null;
+  private castleAt: [number, number, number] | null = null;
+  /** world-space min corner of the castle grid */
+  castleOrigin(): [number, number, number] {
+    if (this.castleAt) return this.castleAt;
+    const [sx, , sz] = CASTLE_SIZE;
+    const ox = 24, oz = -sz / 2 | 0;
+    let sum = 0, n = 0;
+    for (let z = 0; z < sz; z += 3) for (let x = 0; x < sx; x += 3) { sum += this.height(ox + x, oz + z); n++; }
+    const base = Math.max(WATER_LEVEL + 2, Math.min(H - CASTLE_SIZE[1] - 2, Math.round(sum / n) + 1));
+    return (this.castleAt = [ox, base, oz]);
+  }
+  private castle() {
+    if (!this.castleGrid) {
+      const bin = atob(CASTLE_DATA);
+      const g = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) g[i] = bin.charCodeAt(i);
+      this.castleGrid = g;
+    }
+    return this.castleGrid;
+  }
+  private stampCastle(cx: number, cz: number, c: Uint8Array) {
+    const [ox, oy, oz] = this.castleOrigin();
+    const [sx, sy, sz] = CASTLE_SIZE;
+    const x0 = Math.max(0, ox - cx * CH), x1 = Math.min(CH, ox + sx - cx * CH);
+    const z0 = Math.max(0, oz - cz * CH), z1 = Math.min(CH, oz + sz - cz * CH);
+    if (x0 >= x1 || z0 >= z1) return;
+    const g = this.castle();
+    const MAP = [0, B.STONE_BRICK, B.MOSSY_BRICK, B.TIMBER, B.LOG, B.PLANKS, B.BRICK, B.GRASS, B.DIRT, B.WATER, B.GLASS, B.COBBLE];
+    for (let lz = z0; lz < z1; lz++)
+      for (let lx = x0; lx < x1; lx++) {
+        const gx = cx * CH + lx - ox, gz = cz * CH + lz - oz;
+        let footprint = false;
+        for (let y = 0; y < sy; y++) {
+          const v = g[(y * sz + gz) * sx + gx];
+          if (v === 255) continue;
+          const wy = oy + y;
+          if (wy >= H) break;
+          c[idx(lx, wy, lz)] = MAP[v] ?? 0;
+          if (y < 2 && v !== 0) footprint = true;
+        }
+        // clear terrain poking above the ground floor, and build a foundation down to the ground
+        if (footprint || g[gz * sx + gx] !== 255) {
+          for (let y = oy; y < H; y++) if (g[((y - oy) * sz + gz) * sx + gx] === 255 && (y - oy) < 3) c[idx(lx, y, lz)] = 0;
+          for (let y = oy - 1; y > 0; y--) {
+            const cur = c[idx(lx, y, lz)];
+            if (cur !== 0 && cur !== B.WATER && !isPlant(cur) && cur !== B.LEAVES && y < oy - 1) break;
+            c[idx(lx, y, lz)] = y === oy - 1 ? B.STONE_BRICK : B.COBBLE;
+          }
+        }
+      }
+  }
+  /** a dry spot just outside the castle's south gate */
+  castleSpawn(): [number, number, number] {
+    const [ox, , oz] = this.castleOrigin();
+    return this.findDry(ox + (CASTLE_SIZE[0] >> 1), oz + CASTLE_SIZE[2] + 6);
+  }
 
   private hcache = new Map<number, number>();
   height(x: number, z: number) {
@@ -282,6 +342,7 @@ export class World {
           c[idx(x, h, z)] = B.DIRT;
         }
       }
+    this.stampCastle(cx, cz, c);
     const e = this.edits[chunkKey(cx, cz)];
     if (e) for (const k in e) c[+k] = e[k];
     return c;

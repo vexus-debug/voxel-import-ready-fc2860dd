@@ -19,6 +19,7 @@ export const ui = {
   lastSaved: 0,
   underwater: false,
   photo: false,
+  fly: false,
   hideHud: false,
 };
 
@@ -79,9 +80,9 @@ export function getGame(): Game {
   }
   const seed = saved?.seed ?? Math.floor(Math.random() * 1e9);
   const world = new World(seed, (saved?.edits as Edits) ?? {});
-  const [sx, sy, sz] = world.findDry(8, 8);
+  const [sx, sy, sz] = world.castleSpawn();
   const spawn = new THREE.Vector3(sx + 0.5, sy + 0.5, sz + 0.5);
-  let pos = saved?.pos ? new THREE.Vector3(...saved.pos) : spawn.clone();
+  let pos = saved?.pos && saved?.castle ? new THREE.Vector3(...saved.pos) : spawn.clone();
   // never resume inside water or terrain
   const here = world.get(Math.floor(pos.x), Math.floor(pos.y), Math.floor(pos.z)) ?? 0;
   if (here === B.WATER || (here !== 0 && !isPassable(here))) pos = spawn.clone();
@@ -109,6 +110,7 @@ export function saveGame() {
         counts: ui.counts,
         time: ui.time,
         selected: ui.selected,
+        castle: 1,
       }),
     );
     ui.lastSaved = Date.now();
